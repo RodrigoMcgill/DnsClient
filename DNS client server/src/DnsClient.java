@@ -1,7 +1,7 @@
 /*
  * @Author: Rodrigo M , Katwar Be
  * DNS client server
- * 
+ * Network lab.................
  */
 
 import java.net.DatagramPacket;

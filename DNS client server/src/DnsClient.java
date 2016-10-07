@@ -18,27 +18,39 @@ public class DnsClient {
 	private static byte[] sendData;
 	private static  byte [] receiveData;
 	private static String  targetServer = "some ip address";
-	private static int error = 0;
+	private static boolean error = false;
+	
 	public static void main(String[] args) throws Exception {
 		
 		
-		//try{
 			
 		BufferedReader commandline = new BufferedReader(new InputStreamReader(System.in));
 		System.out.print("Input command line:");
 		String inputUser = commandline.readLine();
+		System.out.println(error);
 			
 		String timeOutValue = TimeOutInputMapping(inputUser);
 		System.out.println("time out value " + timeOutValue);
+		System.out.println(error);
 		
 		String maxRetriesValue = maxRetriesInputMapping(inputUser);
 		System.out.println("max out value : " + maxRetriesValue);
+		System.out.println(error);
 		
 		String typeQuerry = typeQuerryInputMapping(inputUser);
 		System.out.println("type of Querry : " + typeQuerry);
 		
-		String ipAddress = ipAddressInputMapping(inputUser);
-		System.out.println("ip address : " + ipAddress);	
+		String ipAddress = ipAddressInputMapping(inputUser)[0];
+		System.out.println("ip address : " + ipAddress);
+		
+		String name = ipAddressInputMapping(inputUser)[1];
+		System.out.println("name of website is : " + name );
+		System.out.println(error);
+		if(error){
+			System.out.println("The program will no longer continue forward due to errors");
+		}
+		
+		else{
 		//creates the client socket for this client
 			/*
 		DatagramSocket clientSocket = new DatagramSocket();
@@ -69,6 +81,7 @@ public class DnsClient {
 		
 	}
 	*/
+		}
 	}
 	
 	
@@ -101,7 +114,7 @@ public class DnsClient {
 						Integer.parseInt(timeOutValue);
 					}catch (Exception e){
 						System.out.println("Wrong format on time out value");
-						error = 1;
+						error = true;
 					}
 					return timeOutValue;
 				}
@@ -139,7 +152,7 @@ public class DnsClient {
 						Integer.parseInt(maxRetries);
 					}catch (Exception e){
 						System.out.println("Wrong format on maximum retries");
-						error = 1;
+						error = true;
 					}
 					return maxRetries;
 				}
@@ -156,32 +169,49 @@ public class DnsClient {
 			else if(inputUser.charAt(i)== '-' && inputUser.charAt(i+1) == 'n' && inputUser.charAt(i+2) == 's'){
 				return "NS";
         	 }
+			else if(inputUser.charAt(i)== '-' && inputUser.charAt(i+1) == 'A'){
+				return "A";
+        	 }
 		}
 		return "A";
 	}
 
-	
-	public static String ipAddressInputMapping(String inputUser){
-		String ipAddress = "";
+	//need to fix this
+	public static String[] ipAddressInputMapping(String inputUser){
+		String []ipAddress_Name = new String[2];
+		ipAddress_Name[0] = "";
+		ipAddress_Name[1]= "";
+		int next = 0;
           for(int i=0;i<inputUser.length(); i++){
         	  if(inputUser.charAt(i)== '@'){
         		  for(int j=i+1; j<inputUser.length();j++){
         			  	if(inputUser.charAt(j) == ' '){
-        				  		return ipAddress;
+        			  		next = j;
+        				  	break;
         			  	}else if(inputUser.charAt(j) == '.'){
-        			  		ipAddress += ".";
+        			  		ipAddress_Name[0] += ".";
         			  	}
         			  	else if (Character.isDigit(inputUser.charAt(j))){
-        			  			ipAddress += inputUser.charAt(j);
+        			  		ipAddress_Name[0] += inputUser.charAt(j);
             		    }
-        			  	else
-        			  		return "Wrong ip address format";
-        			  	    error =1;
+        			  	else{
+        			  		System.out.println("Wrong ip address format");
+        			  	    error =true;
+        			  	    break;
+        			  	}
         	       }
-        		  return ipAddress;
+        		  
               }
            }
-          return "wrong ip address format";
+          for(next++; next < inputUser.length(); next++){
+        	  if(inputUser.charAt(next) != ' '){
+        		  ipAddress_Name[1] += inputUser.charAt(next);
+        	  }
+          }
+          if(ipAddress_Name[1] == null){
+        	  error = true;
+          }
+          return ipAddress_Name;
 	}
 	
 }

@@ -23,28 +23,34 @@ public class DnsClient {
 	public static void main(String[] args) throws Exception {
 		
 		
-			
+		//take input form user	
 		BufferedReader commandline = new BufferedReader(new InputStreamReader(System.in));
 		System.out.print("Input command line:");
 		String inputUser = commandline.readLine();
-		System.out.println(error);
-			
+
+		//extracts the time out value ,(optional) default: 5
 		String timeOutValue = TimeOutInputMapping(inputUser);
 		System.out.println("time out value " + timeOutValue);
-		System.out.println(error);
 		
+		
+		//extracts the max retries values, (optional) default: 3
 		String maxRetriesValue = maxRetriesInputMapping(inputUser);
 		System.out.println("max out value : " + maxRetriesValue);
-		System.out.println(error);
 		
+		
+		//extracts type of Querry (optional) default : Type A
 		String typeQuerry = typeQuerryInputMapping(inputUser);
 		System.out.println("type of Querry : " + typeQuerry);
 		
+		//extracts ip address (mandatory)
 		String ipAddress = ipAddressInputMapping(inputUser)[0];
 		System.out.println("ip address : " + ipAddress);
 		
+		//extracts host domain (mandatory)
 		String name = ipAddressInputMapping(inputUser)[1];
 		System.out.println("name of website is : " + name );
+		
+		//if in any of the previous methods, something went wrong that does not met the format, then an error will occur and program will not continue
 		System.out.println(error);
 		if(error){
 			System.out.println("The program will no longer continue forward due to errors");
@@ -84,12 +90,14 @@ public class DnsClient {
 		}
 	}
 	
-	
+	/**
+	 * 
+	 * @param inputUser
+	 * @return time out number
+	 * @throws IOException
+	 */
 	public static String TimeOutInputMapping(String inputUser) throws IOException{
-		//get input from command line
-				
 		String timeOutValue = "";
-
 			for(int i=0; i < inputUser.length(); i++){
 				if(inputUser.charAt(i)== '-' && inputUser.charAt(i + 1) == 't' ){
 					int flagAtT = i + 1;
@@ -122,13 +130,15 @@ public class DnsClient {
 		return "5";
 }
 	
+	/**
+	 * 
+	 * @param inputUser
+	 * @return max retries before server gives up
+	 * @throws IOException
+	 */
 	public static String maxRetriesInputMapping(String inputUser) throws IOException{
-		//get input from command line
-			
-	
 		String maxRetries = "";
-         
-			for(int i=0; i < inputUser.length(); i++){
+         	for(int i=0; i < inputUser.length(); i++){
 				if(inputUser.charAt(i)== '-' && inputUser.charAt(i + 1) == 'r' ){
 					int flagAtT = i + 1;
 					int counter = 0;
@@ -159,7 +169,10 @@ public class DnsClient {
 			 }
  	return "3";
 }
-	
+	/**
+	 * @param inputUser
+	 * @return the type of querry
+	 */
 	public static String typeQuerryInputMapping(String inputUser){
 		String QuerryType = "";
 		for(int i=0; i < inputUser.length(); i++){
@@ -176,7 +189,12 @@ public class DnsClient {
 		return "A";
 	}
 
-	//need to fix this
+	//self remainder: need to come up with an efficient way
+	/**
+	 * 
+	 * @param input from command line
+	 * @return both the ip address and name
+	 */
 	public static String[] ipAddressInputMapping(String inputUser){
 		String []ipAddress_Name = new String[2];
 		ipAddress_Name[0] = "";
@@ -200,8 +218,7 @@ public class DnsClient {
         			  	    break;
         			  	}
         	       }
-        		  
-              }
+        	   }
            }
           for(next++; next < inputUser.length(); next++){
         	  if(inputUser.charAt(next) != ' '){

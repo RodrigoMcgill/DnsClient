@@ -2,7 +2,8 @@ import java.io.IOException;
 
 public class inputCommandLine {
 	
-	private boolean error;
+	private boolean error = false;
+	private String error_message;
 	
 	public  String TimeOutInputMapping(String inputUser) throws IOException{
 		String timeOutValue = "";
@@ -29,7 +30,7 @@ public class inputCommandLine {
 					try{
 						Integer.parseInt(timeOutValue);
 					}catch (Exception e){
-						System.out.println("Wrong format on time out value");
+						error_message = "Wrong format on time out value";
 						error = true;
 					}
 					return timeOutValue;
@@ -69,7 +70,7 @@ public class inputCommandLine {
 					try{
 						Integer.parseInt(maxRetries);
 					}catch (Exception e){
-						System.out.println("Wrong format on maximum retries");
+						error_message = "Wrong format on maximum retries";
 						error = true;
 					}
 					return maxRetries;
@@ -97,7 +98,6 @@ public class inputCommandLine {
 		return "A";
 	}
 
-	//self remainder: need to come up with an efficient way
 	/**
 	 * 
 	 * @param input from command line
@@ -105,10 +105,12 @@ public class inputCommandLine {
 	 */
 	public  String[] ipAddressInputMapping(String inputUser){
 		String []ipAddress_Name = new String[2];
+		int numberDots = 0;
 		ipAddress_Name[0] = "";
 		ipAddress_Name[1]= "";
 		int next = 0;
-          for(int i=0;i<inputUser.length(); i++){
+		
+		for(int i=0;i<inputUser.length(); i++){
         	  if(inputUser.charAt(i)== '@'){
         		  for(int j=i+1; j<inputUser.length();j++){
         			  	if(inputUser.charAt(j) == ' '){
@@ -116,28 +118,42 @@ public class inputCommandLine {
         				  	break;
         			  	}else if(inputUser.charAt(j) == '.'){
         			  		ipAddress_Name[0] += ".";
+        			  		numberDots++;
         			  	}
         			  	else if (Character.isDigit(inputUser.charAt(j))){
         			  		ipAddress_Name[0] += inputUser.charAt(j);
             		    }
         			  	else{
-        			  		System.out.println("Wrong ip address format");
+        			  		error_message ="Wrong ip address format";
         			  	    error =true;
         			  	    break;
         			  	}
         	       }
-        	   }
+        	   }        	 
            }
-          for(next++; next < inputUser.length(); next++){
-        	  if(inputUser.charAt(next) != ' '){
-        		  ipAddress_Name[1] += inputUser.charAt(next);
-        	  }
-          }
-          if(ipAddress_Name[1] == null){
-        	  error = true;
-          }
-          return ipAddress_Name;
+		try{
+				for(next++; next < inputUser.length(); next++){
+						if(inputUser.charAt(next) != ' '){
+							ipAddress_Name[1] += inputUser.charAt(next);
+						}
+				}
+				if(ipAddress_Name[1] == null){
+						error_message = "Domain name missing!";
+						error = true;
+				}
+				else if(numberDots != 3){
+						error_message = "Wrong format in the ip_address";
+						error = true;
+				}
+		}catch(Exception e){
+			System.out.println(e);
+			error = true;
+		}
+		
+			return ipAddress_Name;
 	}
+	
+	
 	
 	public void setError(boolean default_error){
 		error = default_error;
@@ -145,5 +161,9 @@ public class inputCommandLine {
 	
 	public boolean getError(){
 		return error;
+	}
+	
+	public String getMessageError(){
+		return error_message;
 	}
 }

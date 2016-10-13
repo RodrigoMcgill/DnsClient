@@ -11,6 +11,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.Arrays;
 
 public class DnsClient {
 
@@ -24,7 +25,7 @@ public class DnsClient {
 		inputCommandLine icl = new inputCommandLine();
 		//take input from user	
 		BufferedReader commandline = new BufferedReader(new InputStreamReader(System.in));
-		System.out.print("Input command line:");
+		System.out.println("Input command line:");
 		String inputUser = commandline.readLine();
 
 		//extracts the time out value ,(optional) default: 5
@@ -49,11 +50,11 @@ public class DnsClient {
 		String name = icl.ipAddressInputMapping(inputUser)[1];
 		System.out.println("name of website is : " + name );
 		
+		
 		//if in any of the previous methods, something went wrong that does not met the format, then an error will occur and program will not continue
 		
-		
 		if(icl.getError()){
-			System.out.println("The program will no longer continue forward due to errors");
+			System.out.println(icl.getMessageError());
 		}
 		
 		else{

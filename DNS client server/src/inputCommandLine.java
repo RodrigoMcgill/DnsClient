@@ -1,5 +1,5 @@
 import java.io.IOException;
-
+//https://github.com/examplecode/gfw_dns_resolver/blob/master/GFWDnsResolver.java
 public class inputCommandLine {
 	
 	private boolean error = false;

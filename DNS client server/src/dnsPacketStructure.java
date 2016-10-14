@@ -1,67 +1,52 @@
+import java.nio.ByteBuffer;
 import java.util.Random;
 
 public class dnsPacketStructure {
 private int id_packet; 
 	
 	public dnsPacketStructure(String qtype_entry,String domain_name){
-		Random ranI = new Random();
-		 short id_packet =  (short) ranI.nextInt(65536);  //chooses a number between 0 and 65636(16bit)
-		
-		byte QR = 0; //response
-		
-		byte OPCODE = 0;  //not use in sending set this to 0
-		
-		byte AA = 0; //not use in sending
-		
-		byte TC = 0; //not use in sending
-		
-		byte RD = 1;
-		
-		byte RA = 0;
-		
-		byte Z = 000; //not use in sending set to 0
-		
-		byte RCODE = 0000;   //not use in sending
-		
-		
-		short QDCOUNT = 0x0001;  //16 bit
-		
-		short ANCOUNT = 0x0000;  //16 bit
-		
-		short NSCOUNT = 0x0000; //16 bit
-		
-		short ARCOUNT = 0x0000; //16 bit
-				
+		 Random ranI = new Random();
+		 		
+		 ByteBuffer buff = ByteBuffer.allocate(56);
+		 //creates array with 2 bytes = 16 bits
+		 byte[] seq = new byte[2];
+		 
+		  ranI.nextBytes(seq);
+		  
+		  buff.put(seq);
+		  
+		  byte[] header	= {0x00,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x0001,0x0000,0x0000,0x0000};
+		  
+		  buff.put(header);
+		  
+		  
 		//-----question section-----//
-		//encodes domain_name into byte array
-		byte [] name = qnameEncoding(domain_name).clone();
+		//encodes domain_name and adds it to the buffer.: encodes  number of characters and then the characters themselves
+		  
+		String[] parts = domain_name.split("\\.");
+		for(int i= 0; i < parts.length;i++) {
+			buff.put((byte) parts[i].length());
+			buff.put(parts[i].getBytes());
+		}
+		//putting 0 meaning the end of the question
+		buff.put((byte)0x00);
 		
-		short QTYPE;
+		//qtype entry 16 bits
 		switch(qtype_entry){
-				case "A" :	QTYPE = 0x0001;
-				case "MX":  QTYPE = 0x0002;
-				case "NS":  QTYPE = 0x000f;
+				case "A" :	buff.put((byte)0x0001);	
+				case "MX":  buff.put((byte)0x0002);
+				case "NS":  buff.put((byte)0x000f);
 		}
 		
-		short QCLASS = 0x0001;
-	
-		//------Answers----//
+		//QCLass 16 bits
+		buff.put((byte)0x0001);
 		
-		//byte[] NAME ??//
-		
-		short CLASS = 0x0001;
-		
-		int TTL ;
-		
-		short RDLENGTH;  //specifies ...
-		
-		byte[] RDATA; // specifies all data!!
-		
+	// I believe this marks the end of the DNS querry. nothing more to add. No  need to add **AUTHORITY** and ** ADDITIONAL** since this is a querry	
 	}
 	
 	
 	
-	
+	// Test code to extract domain name..may not have to use it but I overcomplicated it
 	public static byte[] qnameEncoding(String domain_name){
 		byte clone[] = new byte[domain_name.length() + 2];  //algo
 		int current_memory = 0;

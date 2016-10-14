@@ -24,10 +24,25 @@ public class DnsClient {
 		
 		inputCommandLine icl = new inputCommandLine();
 		//take input from user	
+		/*
 		BufferedReader commandline = new BufferedReader(new InputStreamReader(System.in));
 		System.out.println("Input command line:");
 		String inputUser = commandline.readLine();
-
+         */
+		String inputUser = "";
+		for(int arg = 0; arg < args.length; arg++){
+			inputUser += args[arg] + " ";
+		}
+		
+		if(inputUser == ""){
+			System.out.println("No arguments provided");
+			System.exit(0);
+		}
+		
+		else{		
+		//debug purposes.  prints out de command line value
+		System.out.println(inputUser);
+		
 		//extracts the time out value ,(optional) default: 5
 		String timeOutValue = icl.TimeOutInputMapping(inputUser);
 		System.out.println("time out value " + timeOutValue);
@@ -58,6 +73,9 @@ public class DnsClient {
 		}
 		
 		else{
+			
+			dnsPacketStructure dnsPS = new dnsPacketStructure(typeQuerry,name);
+			
 		//creates the client socket for this client
 			/*
 		DatagramSocket clientSocket = new DatagramSocket();
@@ -91,6 +109,7 @@ public class DnsClient {
 		}
 	}
 	
+	}
 
 	
 }

@@ -1,88 +1,129 @@
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
 public class dnsPacketStructure {
-private int id_packet; 
+	private short ID;
+	private byte QR = 0x00;
+	private byte OPCODE = 0x00; 
+	private byte AA, TC = 0x00;
+	private byte RD = 0x01;
+	private byte RA, Z, RCODE =  0x00;
+	private byte QDCOUNT, ANCOUNT = 0x0001;
+	private byte NSCOUNT, ARCOUNT = 0x0000;
+    private byte qtype_entryy;
+    private byte QCLASS = 0x01;
+	private String domain_name;
+	private byte[] dnsPacketHeader = new byte[12];
+	private byte[] dnsPacketQuestion;
+	private ByteBuffer  buff;
+	
 	
 	public dnsPacketStructure(String qtype_entry,String domain_name){
+		
+		//acquiring packet header//
 		 Random ranI = new Random();
-		 		
-		 ByteBuffer buff = ByteBuffer.allocate(56);
-		 //creates array with 2 bytes = 16 bits
-		 byte[] seq = new byte[2];
-		 
-		  ranI.nextBytes(seq);
-		  
-		  buff.put(seq);
-		  
-		  byte[] header	= {0x00,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x0001,0x0000,0x0000,0x0000};
-		  
-		  buff.put(header);
-		  
-		  
-		//-----question section-----//
-		//encodes domain_name and adds it to the buffer.: encodes  number of characters and then the characters themselves
-		  
-		String[] parts = domain_name.split("\\.");
-		for(int i= 0; i < parts.length;i++) {
-			buff.put((byte) parts[i].length());
-			buff.put(parts[i].getBytes());
-		}
-		//putting 0 meaning the end of the question
-		buff.put((byte)0x00);
+	     ID = (short) ranI.nextInt(Short.MAX_VALUE);
+	     String s99 = String.format("%8s", Integer.toBinaryString(ID & 0xFFFF)).replace(' ', '0');
+	     System.out.println("the random nmber is:  " + s99);
 		
-		//qtype entry 16 bits
+	   	
+		//fills the buffer with these values
+		dnsPacketHeader[0] = (byte)(ID >>> 8);
+		dnsPacketHeader[1] = (byte)(ID);
+		dnsPacketHeader[2] = (byte)((QR << 7) | ( OPCODE << 3) | ( AA << 2) | (TC << 1) | RD) ;
+		dnsPacketHeader[3] = (byte) ((RA << 7 ) |(Z << 4) | RCODE);
+		dnsPacketHeader[4] = (byte) (0x00);
+		dnsPacketHeader[5] = (byte) (QDCOUNT);
+		dnsPacketHeader[6] = (byte) (0x00);
+		dnsPacketHeader[7] = (byte) (ANCOUNT);
+		dnsPacketHeader[8] = (byte) (0x00);
+		dnsPacketHeader[9] = (byte)  (NSCOUNT);
+		dnsPacketHeader[10] = (byte) (0x00);
+		dnsPacketHeader[11] = (byte) (ARCOUNT);
+		
+		//for debugging purposes
+		System.out.println("checking inside bufffer");
+		String s1 = String.format("%8s", Integer.toBinaryString(dnsPacketHeader[0] & 0xFF)).replace(' ', '0');
+		System.out.println(s1);
+		String s2 = String.format("%8s", Integer.toBinaryString(dnsPacketHeader[1] & 0xFF)).replace(' ', '0');
+		System.out.println(s2);
+		String s3 = String.format("%8s", Integer.toBinaryString(dnsPacketHeader[2] & 0xFF)).replace(' ', '0');
+		System.out.println(s3);
+		String s4 = String.format("%8s", Integer.toBinaryString(dnsPacketHeader[3] & 0xFF)).replace(' ', '0');
+		System.out.println(s4);
+		String s5 = String.format("%8s", Integer.toBinaryString(dnsPacketHeader[4] & 0xFF)).replace(' ', '0');
+		System.out.println(s5);
+		String s6 = String.format("%8s", Integer.toBinaryString(dnsPacketHeader[5] & 0xFF)).replace(' ', '0');
+		System.out.println(s6);
+		String s7 = String.format("%8s", Integer.toBinaryString(dnsPacketHeader[6] & 0xFF)).replace(' ', '0');
+		System.out.println(s7);
+		String s8 = String.format("%8s", Integer.toBinaryString(dnsPacketHeader[7] & 0xFF)).replace(' ', '0');
+		System.out.println(s8);
+		String s9 = String.format("%8s", Integer.toBinaryString(dnsPacketHeader[8] & 0xFF)).replace(' ', '0');
+		System.out.println(s9);
+		String s10 = String.format("%8s", Integer.toBinaryString(dnsPacketHeader[9] & 0xFF)).replace(' ', '0');
+		System.out.println(s10);
+		String s11 = String.format("%8s", Integer.toBinaryString(dnsPacketHeader[10] & 0xFF)).replace(' ', '0');
+		System.out.println(s11);
+		String s12 = String.format("%8s", Integer.toBinaryString(dnsPacketHeader[11] & 0xFF)).replace(' ', '0');
+		System.out.println(s12);
+		
+		//acquiring packing data//
 		switch(qtype_entry){
-				case "A" :	buff.put((byte)0x0001);	
-				case "MX":  buff.put((byte)0x0002);
-				case "NS":  buff.put((byte)0x000f);
+			case "A" :	this.qtype_entryy =(byte)0x01;   //0000001
+						break;
+			case "MX":  this.qtype_entryy =(byte)0x02;    // 00000010
+						break;
+			case "NS":  this.qtype_entryy = 0x0f;    // 00001111
+						break;
 		}
 		
-		//QCLass 16 bits
-		buff.put((byte)0x0001);
-		
-	// I believe this marks the end of the DNS querry. nothing more to add. No  need to add **AUTHORITY** and ** ADDITIONAL** since this is a querry	
+		//encodes domain_name and adds it to the buffer.: encodes  number of characters and then the characters themselves
+				String[] parts = domain_name.split("\\.");
+				System.out.println("veryfying String: " + parts[0] + " " + parts[1] +" " +parts[2]);
+		        
+				int byteSize = 0;
+				for(int i=0 ; i < parts.length ; i++){
+					for(int j=0; j < parts[i].length(); j++){
+						byteSize ++;
+					}
+				}
+				
+				byteSize += parts.length + 1 + 4;
+				System.out.println("bytesize is : " + byteSize);
+				
+				 buff = ByteBuffer.allocate(byteSize);
+				
+				for (String k : parts) {
+					buff.put((byte) k.length());
+					try {
+						buff.put(k.getBytes("UTF-8"));
+					} catch (UnsupportedEncodingException e) {
+						System.out.println(e.getMessage());
+					}
+				}
+				
+			   //marks end of message with a 0
+				buff.put((byte) 0x00);
+				
+				//putting QTYPE and  QCLASS
+				buff.put((byte) 0x00);
+				buff.put((byte)qtype_entryy);
+				buff.put((byte) 0x00);
+				buff.put((byte)QCLASS);
 	}
 	
 	
 	
-	// Test code to extract domain name..may not have to use it but I overcomplicated it
-	public static byte[] qnameEncoding(String domain_name){
-		byte clone[] = new byte[domain_name.length() + 2];  //algo
-		int current_memory = 0;
-		int past_pointer = 0;
-		int future_pointer = 0;
-		
-		try{
-		for(int i=0; i < domain_name.length(); i++){
-			if(i == domain_name.length() -1){   //exit condition
-				future_pointer = i;
-				int num_char = domain_name.substring(past_pointer, future_pointer + 1).length();
-				clone[current_memory] = (byte)num_char;
-				current_memory++;
-				for(past_pointer = past_pointer; past_pointer < future_pointer + 1; past_pointer++){
-					clone[current_memory] = (byte) domain_name.charAt(past_pointer);
-					current_memory++;
-				}
-			}
-			else if(domain_name.charAt(i) == '.'){
-				future_pointer = i;
-				int num_char = domain_name.substring(past_pointer, future_pointer).length();
-				clone[current_memory] = (byte)num_char;
-				current_memory ++;
-				for(past_pointer = past_pointer; past_pointer < future_pointer; past_pointer++){
-					clone[current_memory] = (byte) domain_name.charAt(past_pointer);
-					current_memory++;
-				}
-				past_pointer += 1;
-			}
-		}
-		clone[current_memory] = (byte)0;
-		
-		}catch(Exception e){
-			System.out.println(e);
-		}
-		return clone;
+	public byte[] getdnsPacketHeader(){
+		return dnsPacketHeader;
 	}
 	
+   public ByteBuffer getByteBuffer(){
+	   System.out.println("calling getByteBuffer size is " + buff.remaining());
+	   return buff;
+   }
+	
+	 
 }

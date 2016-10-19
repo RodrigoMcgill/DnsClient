@@ -153,8 +153,7 @@ public class inputCommandLine {
 			return ipAddress_Name;
 	}
 	
-	
-	
+		
 	public void setError(boolean default_error){
 		error = default_error;
 	}

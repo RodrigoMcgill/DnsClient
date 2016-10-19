@@ -5,7 +5,9 @@
  */
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -20,7 +22,7 @@ import java.util.Random;
 
 public class DnsClient {
 
-	private static int port = 53;
+	private static int UDP_PORT = 53;
 	private static  byte [] receiveData = new byte[500];
 	private static String timeOutValue;
 	private static String maxRetriesValue;
@@ -89,13 +91,20 @@ public class DnsClient {
 		}
 		
 	    if(icl.getError()){
-	    	error = true;
 	    	System.out.println(icl.getMessageError());
 	    	System.exit(0);
 		}
 	     else{
-	     System.out.println("----checkpoint reached-----");
-	          
+	     System.out.println("No error found in extracting the values from command line");
+	     
+	     System.out.println("\n" + "\n");
+	     System.out.println("-------Summarizing input------");
+	     System.out.println("DNSClient sending request for " + domain );
+	     System.out.println("Server: " + IPAddress);
+	     System.out.println("Request Type: " + typeQuerry);
+	     System.out.println("-------Summarizing input------");
+	     
+	     
 	     preparingPacket();
 	      
 	     }
@@ -133,7 +142,6 @@ public class DnsClient {
 		String s2 = String.format("%8s", Integer.toBinaryString( 0x01 & 0xFFFF)).replace(' ', '0');
 		System.out.println("Recursion is = : " + s2);
        //testing//
-         
          
          
         // QDCOUNT
@@ -176,21 +184,72 @@ public class DnsClient {
         for (int i =0; i< dnsPacketFrame.length; i++) {
             System.out.print("0x" + String.format("%x", dnsPacketFrame[i]) + " " );
         }
-
+        try{
         // *** Send DNS Request Frame ***
         DatagramSocket socket = new DatagramSocket();
-        DatagramPacket dnsReqPacket = new DatagramPacket(dnsPacketFrame, dnsPacketFrame.length, ipAddress, port);
+        
+        DatagramPacket dnsReqPacket = new DatagramPacket(dnsPacketFrame, dnsPacketFrame.length, ipAddress, UDP_PORT);
+        
         socket.send(dnsReqPacket);
+        
 
         // Await response from DNS server
-        byte[] buf = new byte[1024];
+        byte[] buf = new byte[512];
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
         System.out.println("!---------Packet sent------------!");
         socket.receive(packet);
-        System.out.println("!---------Response received------!");
         
+        System.out.println("\n \n ");
+        System.out.println("!---------Response received--------!");
+        //print out all bytes received 
+        System.out.println("\n\nReceived: " + packet.getLength() + " bytes");
+
+        for (int i = 0; i < packet.getLength(); i++) {
+            System.out.print(" 0x" + String.format("%x", buf[i]) + " " );
+        }
+        System.out.println("\n");
+
+
+        DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(buf));
+        System.out.println("Transaction ID: 0x" + String.format("%x", inputStream.readShort()));
+        System.out.println("Flags: 0x" + String.format("%x", inputStream.readShort()));
+        System.out.println("Questions: 0x" + String.format("%x", inputStream.readShort()));
+        System.out.println("Answers RRs: 0x" + String.format("%x", inputStream.readShort()));
+        System.out.println("Authority RRs: 0x" + String.format("%x", inputStream.readShort()));
+        System.out.println("Additional RRs: 0x" + String.format("%x", inputStream.readShort()));
+
+        int point = 0;
+        while ((point = inputStream.readByte()) > 0) {
+            byte[] record = new byte[point];
+
+            for (int i = 0; i < point; i++) {
+                record[i] = inputStream.readByte();
+            }
+
+            System.out.println("Record: " + new String(record, "UTF-8"));
+        }
+
+        System.out.println("Record Type: 0x" + String.format("%x", inputStream.readShort()));
+        System.out.println("Class: 0x" + String.format("%x", inputStream.readShort()));
+        System.out.println("Field: 0x" + String.format("%x", inputStream.readShort()));
+        System.out.println("Type: 0x" + String.format("%x", inputStream.readShort()));
+        System.out.println("Class: 0x" + String.format("%x", inputStream.readShort()));
+        System.out.println("TTL: 0x" + String.format("%x", inputStream.readInt()));
+
+        short addrLen = inputStream.readShort();
+        System.out.println("Len: 0x" + String.format("%x", addrLen));
+
+        System.out.print("Address: ");
+        for (int i = 0; i < addrLen; i++ ) {
+            System.out.print("" + String.format("%d", (inputStream.readByte() & 0xFF)) + ".");
+        }
         
+        //closing socket
        socket.close();
+        }catch(Exception err){
+        	System.out.println("Error in the process of sending the package " + err);
+        }
+        
 	}
 	
 	
@@ -208,10 +267,6 @@ public class DnsClient {
 				typeQ = 0x000F;
 				break;
 		}
-		//testing
-		String s3 = String.format("%8s", Integer.toBinaryString( typeQ & 0xFFFF)).replace(' ', '0');
-		System.out.println("TYPE Q is (bin) = : " + s3);
-		//testing
 		return  typeQ;
 	}
 	

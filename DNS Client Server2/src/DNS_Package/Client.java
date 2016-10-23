@@ -71,7 +71,7 @@ public class Client {
 			//---PASSING TO SENDING PACKET PHASE ---//
 			sendingPacket(name);
 		  else{
-			  System.out.println("ERROR: No domain name present. Please write a domain name after the @xxx.xxx.xxx ");
+			  System.out.println("ERROR	 No domain name present. Please write a domain name after the @xxx.xxx.xxx ");
 			  return;
 		  }
 	}
@@ -86,7 +86,7 @@ public class Client {
 				try {
 						mySocket = new DatagramSocket();
 				} catch (SocketException e1) {
-						System.out.println("Something went wrong creating the socket,Please try again");
+						System.out.println("ERROR	Socket error encoutnered something went wrong when creating the socket,Please try again");
 				}
 				//initialize a packet object with default values & entered arguments
 				packet = new Packet(name, request.getType() ); 
@@ -136,13 +136,13 @@ public class Client {
 					}catch ( SocketTimeoutException e ){
 						//if counter < maximum retry value continue and increase the counter variable by 1
 						if (counterRetries == request.getMaxRetries()){
-							System.out.println("ERROR: Maximum number of retries "+ request.getMaxRetries() + " reached");
+							System.out.println("ERROR	Maximum number of retries "+ request.getMaxRetries() + " exceed");
 							break loop;
 						}
 						System.out.println("Resend package...");
 						counterRetries++;
 					} catch (IOException e) {
-						System.out.println("IO exception e");
+						System.out.println("ERROR	Problems with the socket");
 					}
 					//if received a response, print the time
 					if( responseReceived ){
@@ -163,16 +163,16 @@ public class Client {
     */
    public static void printError(){
 	   	 if(request.getTypeError() == 1){
-			 System.out.println("ERROR : Incorrect Syntax for [-t] [-r] [-p]. Please insert numeric values");
+			 System.out.println("ERROR	Incorrect Syntax:	 for [-t] [-r] [-p]. Please insert numeric values");
 		 }
 		 if(request.getTypeError() == 2){
-			 System.out.println("ERROR : Maximum number of desired retries cannot exceed 50!");
+			 System.out.println("ERROR	Maximum number of desired retries cannot exceed 50!");
 		 }
 		 if(request.getTypeError() == 3){
-			 System.out.println("ERROR : Maximum retry value cannot be 0");
+			 System.out.println("ERROR  Maximum retry value cannot be 0");
 		 }
 		 if(request.getTypeError() == 4){
-			 System.out.println("ERROR : Maximum time out value cannot be 0");
+			 System.out.println("ERROR	 Maximum time out value cannot be 0");
 		 }
 		 return;
    }

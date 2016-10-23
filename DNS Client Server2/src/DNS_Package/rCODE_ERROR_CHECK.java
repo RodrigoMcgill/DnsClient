@@ -20,19 +20,19 @@ public class rCODE_ERROR_CHECK {
 		
 			switch(RCODE_STATUS){
 				case '1':
-						System.out.println("Formal error: The name server was unbale to interpret the query");
+						System.out.println("Error	Formal error  The name server was unbale to interpret the query");
 						break;
 				case '2':
-						System.out.println("Server Failure: the name of the server was unable to process this query due to a problem with the name server");
+						System.out.println("Error	Server Failure the name of the server was unable to process this query due to a problem with the name server");
 						break;
 				case '3':
-						System.out.println("Name error: meaningful only for responses from an authoritative name server, this code signifies that the domain name referenced in the query does not exist");
+						System.out.println("Error	Name error meaningful only for responses from an authoritative name server, this code signifies that the domain name referenced in the query does not exist");
 						break;
 				case '4':
-						System.out.println("Not implemented: the name server does not support the resquested kind of query");
+						System.out.println("Error	Not implemented the name server does not support the resquested kind of query");
 						break;
 				case '5':
-						System.out.println("Refused: The name server refuses to perform the requested operation for policy reasons");
+						System.out.println("Error	Refused The name server refuses to perform the requested operation for policy reasons");
 						break;
 			}
 			error = false;

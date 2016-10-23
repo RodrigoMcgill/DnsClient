@@ -175,7 +175,6 @@ public class Request {
 			 }	
 	}
 	
-	
 	/**
 	 * Extracts and sets the type of Query. If none provided in the arg, then default is type A
 	 * @param inputUser --->command line
@@ -206,7 +205,7 @@ public class Request {
 			try{
 			ipArray[count]= Integer.valueOf(splittedIP);
 			}catch(java.lang.NumberFormatException e){
-                System.out.print("ERROR: dns server's name missing");
+                System.out.print("ERROR  dns server's name missing");
                 System.exit(1);
 			}
 			count++;
@@ -216,10 +215,10 @@ public class Request {
 			address = InetAddress.getByAddress(new byte [] {(byte)ipArray[0],
 					(byte)ipArray[1],(byte)ipArray[2],(byte)ipArray[3]});
 		} catch (UnknownHostException e) {
-			System.out.println("ERROR: IP entered does not match IPV4 pattern");
+			System.out.println("ERROR  IP entered does not match IPV4 pattern");
 			//isIPValid();
 			if(!ipPatternCheck(this.ipAddress)){
-				System.out.println("ERROR: IP entered does not match IPV4 pattern");
+				System.out.println("ERROR  IP entered does not match IPV4 pattern");
 			}
 		}
 		return address;

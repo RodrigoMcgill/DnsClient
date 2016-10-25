@@ -10,8 +10,8 @@ import java.net.*;
 
 public class Client {
     //create request and packet objects
-	private static DNS_Package.Request request; 
-	private static DNS_Package.Packet packet;
+	private static DNS_Package.SetupUserArguments request; 
+	private static DNS_Package.PacketResponse packet;
 	    
 	//               -----main method----
     public static void main (String[] args) throws IOException  {
@@ -45,7 +45,7 @@ public class Client {
 	 */
 	public static void settingParameters(String inputUser,String [] args) throws IOException{
 		//constructor for setting up values
-		request = new Request();
+		request = new SetupUserArguments();
 		//Verifies and sets ip address
 		request.setIp(request.ipAddressInputMapping(inputUser)); 
 		
@@ -89,7 +89,7 @@ public class Client {
 						System.out.println("ERROR	Socket error encoutnered something went wrong when creating the socket,Please try again");
 				}
 				//initialize a packet object with default values & entered arguments
-				packet = new Packet(name, request.getType() ); 
+				packet = new PacketResponse(name, request.getType() ); 
 				
 				//turn the created packet into a byte array packet ready to send
 				byte[] packetData = packet.data();

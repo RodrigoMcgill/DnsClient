@@ -9,7 +9,7 @@ import java.net.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Request {
+public class SetupUserArguments {
 
 	//default values and format of the IP address
 	public static final int TIMEOUT_DEFAULT = 5000; 
@@ -30,7 +30,7 @@ public class Request {
 		"([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
 	
 	//set default values once constructor is called on
-	public Request() {
+	public SetupUserArguments() {
 		this.type =A_QUERY;
 		this.timeout = TIMEOUT_DEFAULT; 
 		this.port = PORT_DEFAULT;

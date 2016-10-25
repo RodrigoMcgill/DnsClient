@@ -9,7 +9,7 @@ import java.nio.charset.*;
 import java.nio.*;
 import java.util.*;
 
-public class Packet {
+public class PacketResponse {
 	//Constants 
 	public final int TYPE_A_RR = 0X0001;
 	public final int TYPE_NS_RR = 0x0002;
@@ -45,13 +45,14 @@ public class Packet {
 	private int qNameSize;
 	private int cNameSize;
 	private final int HEADER_SIZE = 12;
+	private final int QTYPE_AND_QCLASS = 4;
 
 	//Constructor
-	public Packet() {
+	public PacketResponse() {
 
 	}
 	//passed the values of domain name and the type of Query
-	public Packet(String name, int type) {
+	public PacketResponse(String name, int type) {
 		this.name = name;
 		this.type = type;
 	}
@@ -131,13 +132,13 @@ public class Packet {
 	private short writeType(int type) {
 		short value = 0;
 		switch (type) {
-				case DNS_Package.Request.A_QUERY:
+				case DNS_Package.SetupUserArguments.A_QUERY:
 					value = 0x0001;
 					break;
-				case DNS_Package.Request.NS_QUERY:
+				case DNS_Package.SetupUserArguments.NS_QUERY:
 					value = 0x0002;
 					break;
-				case DNS_Package.Request.MX_QUERY:
+				case DNS_Package.SetupUserArguments.MX_QUERY:
 					value = 0x000f;
 					break;
 			}
@@ -186,7 +187,7 @@ public class Packet {
 	}
 	
 	/**
-	 * Interprets the received packet. This method extracts the answers of the query and handles compression
+	 * Interprets the received packet. This method extracts the answers of the query and handles compressed domain names
 	 * @param received packet in []byte format
 	 */
 	public void defineReceivedPacket (byte[] receivedPacket) {
@@ -194,20 +195,17 @@ public class Packet {
 		int byteCounter = 0;
 		String[] binaryPacket = new String[1500];
 		byte byte1;
-		ByteBuffer dup = ByteBuffer.wrap(receivedPacket);    //converts byte[] into buffer
+		ByteBuffer buff = ByteBuffer.wrap(receivedPacket);    //converts byte[] into buffer
 
-		while(dup.hasRemaining()) {
-			byte1 = dup.get();
+		while(buff.hasRemaining()) { //transfers all received binary data into an array String
+			byte1 = buff.get();
 			binaryPacket[byteCounter] = String.format("%8s",Integer.toBinaryString(Byte.toUnsignedInt(byte1))).replace(' ', '0');
 			byteCounter++;
 		}
-		//gets the counts values from the received packet
-		int answerCount = Integer.valueOf(binaryPacket[6].concat(binaryPacket[7]),2);
-		int authorityCount = Integer.valueOf(binaryPacket[8].concat(binaryPacket[9]),2);
-		int addResCount = Integer.valueOf(binaryPacket[10].concat(binaryPacket[11]),2);		
+		
 		
 		//sets the byteCounter index at the start of the answer section
-		byteCounter = HEADER_SIZE+qNameSize+4;
+		byteCounter = HEADER_SIZE+qNameSize+QTYPE_AND_QCLASS;
 		StringBuilder sbuilder = new StringBuilder();
 		//a counter to reach the RCODE from the flags
 		int rcodeCounter = 0;
@@ -222,29 +220,34 @@ public class Packet {
 		//if  RCODE != 0 error occurred
 		int RCODE_STATUS = Integer.valueOf(sbuilder.toString(),2);
 		rCODE_ERROR_CHECK r_E_C = new rCODE_ERROR_CHECK();
+		
+		//gets the counts values from the received packet form their respective locations
+		int ANCount = Integer.valueOf(binaryPacket[6].concat(binaryPacket[7]),2);
+		int NSCount = Integer.valueOf(binaryPacket[8].concat(binaryPacket[9]),2);
+		int ARCount = Integer.valueOf(binaryPacket[10].concat(binaryPacket[11]),2);		
+				
 		if(!(r_E_C.checkDNSTypeError(RCODE_STATUS))){
 			return;
 		}
 		 
 		//if RCODE is 0 check whether there are answers
-		else if (answerCount+authorityCount+addResCount > 0){
-			if (answerCount >= 0) {
-				System.out.println("***Answer Section ("+ answerCount +" records)***");	
+		else if (ANCount+NSCount+ARCount > 0){
+			if (ANCount >= 0) {
+				System.out.println("***Answer Section ("+ ANCount +" records)***");	
 			}
-			if (authorityCount > 0) {
-				System.out.println("***Contains "+ authorityCount+ " Authoritative Resource Records ***");
+			if (NSCount > 0) {
+				System.out.println("***Contains "+ NSCount+ " Authoritative Resource Records ***");
 			}
 			//Iteration of the answer resources records
-			
-			for (int pi = 0; pi < answerCount+authorityCount+addResCount ; pi++) {
+			for (int countJ = 0; countJ < ANCount+NSCount+ARCount ; countJ++) {
 				// The program does not require to output authority section but needs additional answer if any
 				// iterate authority resources records
-				if( pi == (answerCount+authorityCount)) {
-					System.out.println("***Addtional Section ("+ addResCount +" records)***");
+				if( countJ == (ANCount+NSCount)) {
+					System.out.println("***Addtional Section ("+ ARCount +" records)***");
 					
 				}
 				if( Integer.valueOf(binaryPacket[byteCounter]) == 11000000  ) {
-					//gets Flags bytes
+					//get AA field from the 3rd byte from the beginning of the packet
 					int flagCounter=0; 
 					for (char c : binaryPacket[2].toCharArray() ) {
 						flagCounter++;
@@ -253,12 +256,12 @@ public class Packet {
 							this.answerAA= Integer.valueOf(new String(new char[] {c}));
 						}
 					}
-					//next byte is the pointer HEADER_SIZE+qNameSize+4+1
+					
 					byteCounter  = byteCounter+2;
-					//gets Type bytes
+					//get ANSWERTYPE =" A,NS,MX
 					this.answerType = Integer.valueOf(binaryPacket[byteCounter].concat(binaryPacket[byteCounter+1]),2);
 					byteCounter = byteCounter+2;
-					//gets Class bytes
+					//get ANCLASS = x0001
 					this.answerClass = Integer.valueOf(binaryPacket[byteCounter].concat(binaryPacket[byteCounter+1]),2);
 					//gets TTL bytes
 					byteCounter = byteCounter+2;
@@ -266,43 +269,45 @@ public class Packet {
 					for ( int i= 0; i <4 ; i++ ) {
 						sbuilder.append(binaryPacket[byteCounter+i]);
 					}
-					byteCounter= byteCounter+4;
 					this.answerTTL = Integer.valueOf(sbuilder.toString(),2);
+					//update current byte pointer to beginning of RDlength
+					byteCounter= byteCounter+4;
 					//gets RDlength bytes
 					this.answerRdLength = Integer.valueOf(binaryPacket[byteCounter].concat(binaryPacket[byteCounter+1]),2);
 					byteCounter= byteCounter+2;
 					//Rdata cases
 					
-					//A resource record-------------------------------------------
-					//if its a Type A address only the IP address bytes will be taken and store into answerRdata global variable
+					//-------------------A resource record----------------------------
+					//if its a Type A(answerType = 0x0001),then the address only the IP address bytes will be taken and store into answerRdata 
 					if (this.answerType == TYPE_A_RR) {
-						//4 octets
+						//4 octets since 4 bytes are require to represent an ip address
 						sbuilder = new StringBuilder();
-						for (int i = 0; i<4 ; i++ ) {
-							sbuilder.append(Integer.valueOf(binaryPacket[byteCounter+i],2).toString());
-							if( i<3) {
+						for (int ip_count = 0; ip_count<4 ; ip_count++ ) {
+							sbuilder.append(Integer.valueOf(binaryPacket[byteCounter+ip_count],2).toString());
+							if( ip_count<3) {
 								sbuilder.append(".");
 							}
 						}
 						this.answerRdata = sbuilder.toString();
-						byteCounter = byteCounter+4;
+						byteCounter += 4;
 					}
-					//NS resource record---------------------------------------
+					//-------------------NS resource record-------------------------------
+					//if its a Type NS(answerType = 0x0002), then there is a compression method used
 					if (this.answerType == TYPE_NS_RR) {
-						int pointer =0; 
+						int NSpointer =0; 
 						boolean pointerFlag= false;
 						loop:
-						for(int i =0 ; i<63; i++){
+						for(int i =0 ; i<63; i++){    //maximum allowed data is 64 ocets
 							// if  pointer
 							if (Integer.valueOf(binaryPacket[byteCounter+i]) == 11000000){
 								byteCounter = byteCounter+i;
-								pointer = Integer.valueOf(binaryPacket[byteCounter+1],2);
+								NSpointer = Integer.valueOf(binaryPacket[byteCounter+1],2);
 								byteCounter = byteCounter+1;
 								this.cNameSize = i;
 								pointerFlag = true;
 								break loop;
 							}
-							// if no pointer
+							// if no pointer and exit condition
 							if (Integer.valueOf(binaryPacket[byteCounter+i]) == 00000000) {
 								byteCounter = byteCounter+i;
 								this.cNameSize = i;
@@ -318,13 +323,13 @@ public class Packet {
 						loop:
 						for (int w = 0; w < 63 ; w++ ) {
 							namesize++;
-							if (Integer.valueOf(binaryPacket[pointer+w]) == 00000000) {
+							if (Integer.valueOf(binaryPacket[NSpointer+w]) == 00000000) {
 								break loop;
 							}
 						}
-						//if pointer concatenate the pointer string to the original
+						//if the pointerFlag is true, concatenate the whole string name that it is refered to
 						if (pointerFlag == true) {
-							String pointerString = new String(Arrays.copyOfRange(receivedPacket,pointer+1,pointer+namesize),StandardCharsets.US_ASCII);
+							String pointerString = new String(Arrays.copyOfRange(receivedPacket,NSpointer+1,NSpointer+namesize),StandardCharsets.US_ASCII);
 							cname = cname.concat(pointerString);
 						}
 						sbuilder = new StringBuilder();
@@ -332,7 +337,7 @@ public class Packet {
 						this.answerCname = formatAcsiiString(cname);
 						byteCounter = byteCounter+1;					
 					}
-					//CNAME resource record----------------------------------------------
+					//----------------CNAME resource record--------------------------------------
 					//handling same way as the NS records
 					if (this.answerType == TYPE_CNAME_RR) {
 						int pointer =0; 
@@ -371,7 +376,7 @@ public class Packet {
 						this.answerCname = formatAcsiiString(cname);
 						byteCounter = byteCounter+1;
 					}
-					//MAX has 1 extra field to be handled (preference) 
+					//-----------MX resource records ----------- 
 					if (this.answerType == TYPE_MX_RR) {
 						int pointer =0; 
 						boolean pointerFlag= false;
@@ -424,8 +429,8 @@ public class Packet {
 
 	/**
 	 * 
-	 * @param s
-	 * @return
+	 * @param a String name
+	 * @return String name in Acsii format
 	 */
 	public String formatAcsiiString (String s ) {
 		StringBuilder sb = new StringBuilder(); 
